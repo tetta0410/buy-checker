@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>その買い物、ちょっと待て</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: #09090f;
+    color: #e0e0e0;
+    font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  }
+
+/* Input Screen */
+.screen-input {
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 0 20px;
+}
+.input-wrap {
+width: 100%;
+max-width: 400px;
+text-align: center;
+}
+.input-emoji { font-size: 48px; margin-bottom: 12px; }
+.input-title {
+font-size: 24px;
+font-weight: 900;
+margin-bottom: 8px;
+background: linear-gradient(135deg, #c084fc, #8b5cf6);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.input-sub { color: #555; font-size: 13px; margin-bottom: 36px; }
+.price-field {
+position: relative;
+width: 100%;
+}
+.price-field input {
+width: 100%;
+background: #12121e;
+border: 2px solid rgba(139,92,246,0.19);
+border-radius: 16px;
+padding: 20px 60px 20px 20px;
+color: #fff;
+font-size: 24px;
+font-weight: 700;
+outline: none;
+font-family: inherit;
+text-align: center;
+}
+.price-field input::placeholder { color: #444; }
+.price-field input:focus { border-color: rgba(139,92,246,0.5); }
+.price-field .yen {
+position: absolute;
+right: 20px;
+top: 50%;
+transform: translateY(-50%);
+color: #555;
+font-size: 18px;
+font-weight: 700;
+}
+.btn-primary {
+width: 100%;
+margin-top: 20px;
+padding: 18px;
+background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+color: #fff;
+border: none;
+border-radius: 14px;
+font-size: 17px;
+font-weight: 700;
+cursor: pointer;
+font-family: inherit;
+transition: transform 0.1s, opacity 0.2s;
+}
+.btn-primary:disabled {
+background: #333;
+color: #666;
+cursor: default;
+}
+.btn-primary:not(:disabled):active { transform: scale(0.98); }
+
+/* Result Screen */
+.screen-result {
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 0 20px 60px;
+}
+.result-wrap {
+width: 100%;
+max-width: 400px;
+opacity: 0;
+transform: translateY(20px);
+transition: all 0.6s ease-out;
+}
+.result-wrap.show {
+opacity: 1;
+transform: translateY(0);
+}
+.result-header {
+text-align: center;
+padding: 48px 0 32px;
+}
+.result-label {
+font-size: 13px;
+color: #666;
+font-family: monospace;
+}
+.result-price {
+font-size: 36px;
+font-weight: 900;
+background: linear-gradient(135deg, #c084fc, #8b5cf6);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+margin: 4px 0;
+}
+
+/* Timeline */
+.timeline {
+position: relative;
+padding-left: 28px;
+}
+.timeline-line {
+position: absolute;
+left: 8px;
+top: 8px;
+bottom: 8px;
+width: 2px;
+background: linear-gradient(180deg, #8b5cf6, #22c55e);
+border-radius: 1px;
+}
+.timeline-item {
+position: relative;
+margin-bottom: 12px;
+opacity: 0;
+transform: translateX(-10px);
+transition: all 0.5s ease-out;
+}
+.timeline-item.show {
+opacity: 1;
+transform: translateX(0);
+}
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-dot {
+position: absolute;
+left: -24px;
+top: 18px;
+width: 12px;
+height: 12px;
+border-radius: 50%;
+background: #8b5cf6;
+border: 2px solid #09090f;
+}
+.timeline-item:last-child .timeline-dot { background: #22c55e; }
+.timeline-card {
+background: linear-gradient(135deg, #0d0d1a, #1a1a2e);
+border-radius: 14px;
+padding: 16px 18px;
+border: 1px solid rgba(255,255,255,0.04);
+}
+.timeline-item:last-child .timeline-card {
+border: 1px solid rgba(34,197,94,0.19);
+}
+.timeline-top {
+display: flex;
+justify-content: space-between;
+align-items: baseline;
+}
+.timeline-year {
+font-size: 13px;
+color: #888;
+font-family: monospace;
+}
+.timeline-ratio {
+font-size: 11px;
+color: #555;
+font-family: monospace;
+}
+.timeline-amount {
+font-size: 28px;
+font-weight: 800;
+color: #e0e0e0;
+margin-top: 2px;
+}
+.timeline-item:last-child .timeline-amount { color: #22c55e; }
+.timeline-gain {
+font-size: 12px;
+color: rgba(34,197,94,0.56);
+margin-top: 2px;
+}
+
+/* Message */
+.message {
+text-align: center;
+margin-top: 36px;
+opacity: 0;
+transition: opacity 0.8s ease-out;
+}
+.message.show { opacity: 1; }
+.message-text {
+font-size: 20px;
+font-weight: 900;
+background: linear-gradient(135deg, #22c55e, #16a34a);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+line-height: 1.6;
+}
+.message-note {
+font-size: 11px;
+color: #444;
+margin-top: 8px;
+font-family: monospace;
+}
+.btn-reset {
+width: 100%;
+margin-top: 32px;
+padding: 16px;
+background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+color: #fff;
+border: none;
+border-radius: 14px;
+font-size: 16px;
+font-weight: 700;
+cursor: pointer;
+font-family: inherit;
+}
+.btn-reset:active { transform: scale(0.98); }
+
+.hidden { display: none; }
+</style>
+
+</head>
+<body>
+
+<!-- Input Screen -->
+
+<div id="screen-input" class="screen-input">
+  <div class="input-wrap">
+    <div class="input-emoji">💰</div>
+    <div class="input-title">その買い物、ちょっと待って！</div>
+    <div class="input-sub">金額を入れてみて。現実を見てみよう。</div>
+    <div class="price-field">
+      <input type="number" inputmode="numeric" placeholder="金額を入力" id="price-input" autofocus>
+      <span class="yen">円</span>
+    </div>
+    <button class="btn-primary" id="btn-submit" disabled>現実を見る</button>
+  </div>
+</div>
+
+<!-- Result Screen -->
+
+<div id="screen-result" class="screen-result hidden">
+  <div class="result-wrap" id="result-wrap">
+    <div class="result-header">
+      <div class="result-label">もし この</div>
+      <div class="result-price" id="result-price"></div>
+      <div class="result-label">を年利8%で運用してたら…</div>
+    </div>
+    <div class="timeline" id="timeline">
+      <div class="timeline-line"></div>
+    </div>
+    <div class="message" id="message">
+      <div class="message-text">買わない勇気が<br>未来の資産になるぞ！</div>
+      <div class="message-note">※ 複利計算・税引前</div>
+    </div>
+    <button class="btn-reset" id="btn-reset">💸 別の買い物で試す</button>
+  </div>
+</div>
+
+<script>
+const years = [1, 3, 5, 10, 20];
+
+function formatYen(n) {
+  if (n >= 100000000) return (n / 100000000).toFixed(1) + '億円';
+  if (n >= 10000) return Math.round(n / 10000).toLocaleString() + '万円';
+  return Math.round(n).toLocaleString() + '円';
+}
+
+const priceInput = document.getElementById('price-input');
+const btnSubmit = document.getElementById('btn-submit');
+const btnReset = document.getElementById('btn-reset');
+const screenInput = document.getElementById('screen-input');
+const screenResult = document.getElementById('screen-result');
+const resultWrap = document.getElementById('result-wrap');
+const resultPrice = document.getElementById('result-price');
+const timeline = document.getElementById('timeline');
+const message = document.getElementById('message');
+
+priceInput.addEventListener('input', () => {
+  const val = Number(priceInput.value);
+  btnSubmit.disabled = !val || val <= 0;
+});
+
+priceInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !btnSubmit.disabled) submit();
+});
+
+btnSubmit.addEventListener('click', submit);
+btnReset.addEventListener('click', reset);
+
+function submit() {
+  const price = Number(priceInput.value);
+  if (!price || price <= 0) return;
+
+  resultPrice.textContent = formatYen(price);
+
+  // Clear old items
+  const oldItems = timeline.querySelectorAll('.timeline-item');
+  oldItems.forEach(el => el.remove());
+
+  // Build timeline
+  years.forEach((y, i) => {
+    const future = price * Math.pow(1.08, y);
+    const gain = future - price;
+    const ratio = future / price;
+
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    item.style.transitionDelay = (0.2 + i * 0.15) + 's';
+    item.innerHTML = `
+      <div class="timeline-dot"></div>
+      <div class="timeline-card">
+        <div class="timeline-top">
+          <span class="timeline-year">${y}年後</span>
+          <span class="timeline-ratio">×${ratio.toFixed(2)}</span>
+        </div>
+        <div class="timeline-amount">${formatYen(future)}</div>
+        <div class="timeline-gain">+${formatYen(gain)} の利益</div>
+      </div>
+    `;
+    timeline.appendChild(item);
+  });
+
+  // Show result
+  screenInput.classList.add('hidden');
+  screenResult.classList.remove('hidden');
+  message.classList.remove('show');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      resultWrap.classList.add('show');
+      const items = timeline.querySelectorAll('.timeline-item');
+      items.forEach(el => el.classList.add('show'));
+      setTimeout(() => message.classList.add('show'), 1200);
+    });
+  });
+}
+
+function reset() {
+  screenResult.classList.add('hidden');
+  screenInput.classList.remove('hidden');
+  resultWrap.classList.remove('show');
+  priceInput.value = '';
+  btnSubmit.disabled = true;
+  priceInput.focus();
+}
+</script>
+
+</body>
+</html>
